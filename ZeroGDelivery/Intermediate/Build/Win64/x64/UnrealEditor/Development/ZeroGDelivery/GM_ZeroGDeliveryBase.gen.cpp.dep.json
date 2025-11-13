@@ -1,0 +1,22 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\project zero-g delivery\\zero-g_delivery\\zerogdelivery\\intermediate\\build\\win64\\unrealeditor\\inc\\zerogdelivery\\uht\\gm_zerogdeliverybase.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\project zero-g delivery\\zero-g_delivery\\zerogdelivery\\intermediate\\build\\win64\\x64\\zerogdeliveryeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\project zero-g delivery\\zero-g_delivery\\zerogdelivery\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\zerogdelivery\\definitions.zerogdelivery.h",
+            "d:\\project zero-g delivery\\zero-g_delivery\\zerogdelivery\\source\\zerogdelivery\\public\\gm_zerogdeliverybase.h",
+            "c:\\program files\\epic games\\ue_5.4\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamemodebase.h",
+            "c:\\program files\\epic games\\ue_5.4\\engine\\source\\runtime\\engine\\classes\\engine\\serverstatreplicator.h",
+            "c:\\program files\\epic games\\ue_5.4\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\serverstatreplicator.generated.h",
+            "c:\\program files\\epic games\\ue_5.4\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\gamemodebase.generated.h",
+            "c:\\program files\\epic games\\ue_5.4\\engine\\source\\runtime\\core\\public\\logging\\structuredlog.h",
+            "c:\\program files\\epic games\\ue_5.4\\engine\\source\\runtime\\core\\public\\serialization\\compactbinary.h",
+            "c:\\program files\\epic games\\ue_5.4\\engine\\source\\runtime\\core\\public\\serialization\\compactbinarywriter.h",
+            "d:\\project zero-g delivery\\zero-g_delivery\\zerogdelivery\\intermediate\\build\\win64\\unrealeditor\\inc\\zerogdelivery\\uht\\gm_zerogdeliverybase.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

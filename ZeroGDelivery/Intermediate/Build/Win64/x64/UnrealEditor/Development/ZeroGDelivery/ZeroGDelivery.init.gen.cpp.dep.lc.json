@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\project zero-g delivery\\zero-g_delivery\\zerogdelivery\\intermediate\\build\\win64\\unrealeditor\\inc\\zerogdelivery\\uht\\zerogdelivery.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "d:\\project zero-g delivery\\zero-g_delivery\\zerogdelivery\\intermediate\\build\\win64\\x64\\zerogdeliveryeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "d:\\project zero-g delivery\\zero-g_delivery\\zerogdelivery\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\zerogdelivery\\definitions.zerogdelivery.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

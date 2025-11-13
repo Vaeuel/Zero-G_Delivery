@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "ZeroGDelivery",
+			"Path": "..\\Source\\ZeroGDelivery.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "ZeroGDeliveryEditor",
+			"Path": "..\\Source\\ZeroGDeliveryEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
