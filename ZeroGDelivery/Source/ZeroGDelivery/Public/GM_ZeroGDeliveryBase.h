@@ -16,4 +16,5 @@ class ZEROGDELIVERY_API AGM_ZeroGDeliveryBase : public AGameModeBase //What does
 	GENERATED_BODY() //Unreal functionality
 
 	virtual void StartPlay() override; //Find over rides in documentation
+
 };

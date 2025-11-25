@@ -151,7 +151,6 @@
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/__ExternalActors__/StarterLevel/4/JK/9L616JDW2HLB4QTUAR1ZOE.uasset",
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/__ExternalActors__/StarterLevel/A/HH/2C3ZJGPLHMMIDDC7E799S0.uasset",
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/StarterLevel.umap",
-				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/BluePrints/Map/GameMap.umap",
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/BluePrints/Player/BP_DroneCharacter.uasset",
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/Maps/GameMap.umap",
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/BluePrints/BP_GM_ZeroGDeliveryBase.uasset",
@@ -159,7 +158,10 @@
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/Maps/_GENERATED/Drew/Box_89D49EBA.uasset",
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/Maps/_GENERATED/Drew/Cone_25E2ABFE.uasset",
 				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/Maps/_GENERATED/Drew/Merge_DD03390F.uasset",
-				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/BluePrints/Player/SM_Drone.uasset"
+				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/BluePrints/Player/SM_Drone.uasset",
+				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/BluePrints/GUI/BP_GameMenuWidget.uasset",
+				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/BluePrints/HUD/BP_GameHUD.uasset",
+				"D:/Project Zero-G Delivery/Zero-G_Delivery/ZeroGDelivery/Content/BluePrints/Map/GameMap.umap"
 			]
 		}
 	]

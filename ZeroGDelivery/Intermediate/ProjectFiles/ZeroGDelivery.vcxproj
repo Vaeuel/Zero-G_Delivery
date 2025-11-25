@@ -265,10 +265,22 @@
     <ClCompile Include="..\..\Source\ZeroGDelivery\Private\GM_ZeroGDeliveryBase.cpp">
       <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\Source\ZeroGDelivery\Private\GUI\ButtonWidget.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ZeroGDelivery\Private\GUI\GameMenuWidget.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ZeroGDelivery\Private\HUD\GameHUD.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="..\..\Source\ZeroGDelivery\Private\Player\DroneCharacter.cpp">
       <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClInclude Include="..\..\Source\ZeroGDelivery\Public\GM_ZeroGDeliveryBase.h"/>
+    <ClInclude Include="..\..\Source\ZeroGDelivery\Public\GUI\ButtonWidget.h"/>
+    <ClInclude Include="..\..\Source\ZeroGDelivery\Public\GUI\GameMenuWidget.h"/>
+    <ClInclude Include="..\..\Source\ZeroGDelivery\Public\HUD\GameHUD.h"/>
     <ClInclude Include="..\..\Source\ZeroGDelivery\Public\Player\DroneCharacter.h"/>
   </ItemGroup>
   <PropertyGroup>

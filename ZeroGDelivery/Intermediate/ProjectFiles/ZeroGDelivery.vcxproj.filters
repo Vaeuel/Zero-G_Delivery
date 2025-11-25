@@ -45,6 +45,21 @@
     <ClCompile Include="..\..\Source\ZeroGDelivery\Private\GM_ZeroGDeliveryBase.cpp">
       <Filter>Source\ZeroGDelivery\Private</Filter>
     </ClCompile>
+    <Filter Include="Source\ZeroGDelivery\Private\GUI">
+      <UniqueIdentifier>{5A7ABC3E-4A44-3EED-A9F6-325A0C3CA16E}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ZeroGDelivery\Private\GUI\ButtonWidget.cpp">
+      <Filter>Source\ZeroGDelivery\Private\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\ZeroGDelivery\Private\GUI\GameMenuWidget.cpp">
+      <Filter>Source\ZeroGDelivery\Private\GUI</Filter>
+    </ClCompile>
+    <Filter Include="Source\ZeroGDelivery\Private\HUD">
+      <UniqueIdentifier>{0AD85E66-55F7-3D8D-B9F8-653BF666F31F}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ZeroGDelivery\Private\HUD\GameHUD.cpp">
+      <Filter>Source\ZeroGDelivery\Private\HUD</Filter>
+    </ClCompile>
     <Filter Include="Source\ZeroGDelivery\Private\Player">
       <UniqueIdentifier>{1DC73087-8E26-397F-9170-AB50F6182372}</UniqueIdentifier>
     </Filter>
@@ -56,6 +71,21 @@
     </Filter>
     <ClInclude Include="..\..\Source\ZeroGDelivery\Public\GM_ZeroGDeliveryBase.h">
       <Filter>Source\ZeroGDelivery\Public</Filter>
+    </ClInclude>
+    <Filter Include="Source\ZeroGDelivery\Public\GUI">
+      <UniqueIdentifier>{43A84D12-A649-3064-BEEF-CC680C92FD9C}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\ZeroGDelivery\Public\GUI\ButtonWidget.h">
+      <Filter>Source\ZeroGDelivery\Public\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\ZeroGDelivery\Public\GUI\GameMenuWidget.h">
+      <Filter>Source\ZeroGDelivery\Public\GUI</Filter>
+    </ClInclude>
+    <Filter Include="Source\ZeroGDelivery\Public\HUD">
+      <UniqueIdentifier>{F99CF86F-37B8-318F-807B-52C6B8805C63}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\ZeroGDelivery\Public\HUD\GameHUD.h">
+      <Filter>Source\ZeroGDelivery\Public\HUD</Filter>
     </ClInclude>
     <Filter Include="Source\ZeroGDelivery\Public\Player">
       <UniqueIdentifier>{0653B0B1-29F8-3F58-A0DC-13A026E0D21D}</UniqueIdentifier>

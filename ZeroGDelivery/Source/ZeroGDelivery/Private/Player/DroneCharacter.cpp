@@ -8,7 +8,7 @@
 #include "DrawDebugHelpers.h"
 
 // Sets default values
-ADroneCharacter::ADroneCharacter()
+ADroneCharacter::ADroneCharacter() //Constructor - Happens when the editor executes and/ or when the code executes during run time. Null* here will generate an infinite loop and crash.
 {
 	bUseControllerRotationYaw = false;
 	PrimaryActorTick.bCanEverTick = true; //Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -87,11 +87,6 @@ void ADroneCharacter::MoveStrafe(float Value)
 	DroneMesh->AddForce(Force);
 }
 
-void ADroneCharacter::OnYawInput(float Value)
-{
-	TargetYawInput = (FMath::Abs(Value) < .1f) ? 0.f : Value; //Adds small deadzone... Adjust based on feel
-}
-
 void ADroneCharacter::CalculateCenterOfMass()
 {
 	if (!DroneMesh) return;
@@ -105,61 +100,66 @@ void ADroneCharacter::CalculateCenterOfMass()
 	DroneMesh->SetCenterOfMass(CenterOfMassOffset); //Needs to be here for logic
 }
 
-void ADroneCharacter::RotateYaw(float DeltaTime)
+void ADroneCharacter::RotateYaw(float Value)
 {
-	//if (FMath::IsNearlyZero(Value)) return;
+	if (FMath::IsNearlyZero(Value)) return;
 
-	//FVector Torque = FVector(0.f, 0.f, YawThrustStrength * Value);
+	FVector Force = GetActorRightVector() * (YawThrustStrength * Value);
+	YawForceLoc = DroneMesh->GetComponentLocation() + DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset * -1.5f);
+	DroneMesh->AddForceAtLocation(Force, YawForceLoc);
 
-	//DroneMesh->AddTorqueInRadians(Torque, NAME_None, true);
-
-	//FVector AngVel = DroneMesh->GetPhysicsAngularVelocityInRadians();
-	//AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f);
-	//DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel, false);
-
-	if (!DroneMesh) return;
-
-	// --- Smooth input interpolation (frame-rate independent) ---
-	CurrentYawInput = FMath::FInterpTo(CurrentYawInput, TargetYawInput, DeltaTime, YawResponseSpeed);
-
-	if (FMath::IsNearlyZero(CurrentYawInput)) return;
-
-	// --- World-space COM ---
-	FVector COMWorld = DroneMesh->GetComponentLocation() +
-		DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset);
-
-	// --- Front-of-drone force point (in front of COM) ---
-	const float ForwardOffsetDistance = 1000.f; // tweak for sensitivity
-	//YawForceLoc = DroneMesh->GetComponentLocation() + DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset * -1.5f);
-	FVector ForcePoint = COMWorld + GetActorForwardVector() * ForwardOffsetDistance;
-
-	// --- Lateral force to induce yaw ---
-	FVector LateralForce = GetActorRightVector() * (YawThrustStrength * CurrentYawInput);
-
-	// --- Apply force at the point ---
-	DroneMesh->AddForceAtLocation(LateralForce, ForcePoint);
-
-	// --- Clamp angular velocity around Z to prevent spinning too fast ---
 	FVector AngVel = DroneMesh->GetPhysicsAngularVelocityInRadians();
-	AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f); // tweak as needed
+	AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f); //rad/s limit
 	DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel, false);
-
-	// --- Optional: update debug orb ---
-	YawForceLoc = ForcePoint;
 }
 
-//void ADroneCharacter::RotateYaw(float Value)
+void ADroneCharacter::OnYawInput(float Value)
+{
+	TargetYawInput = (FMath::Abs(Value) < .1f) ? 0.f : Value; //Adds small deadzone... Adjust based on feel
+}
+
+//void ADroneCharacter::RotateYaw(float DeltaTime)
 //{
-//	if (FMath::IsNearlyZero(Value)) return;
+//	//if (FMath::IsNearlyZero(Value)) return;
 //
-//	FVector Force = GetActorRightVector() * (YawThrustStrength * Value);
-//	YawForceLoc = DroneMesh->GetComponentLocation() + DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset * -1.5f);
-//	DroneMesh->AddForceAtLocation(Force, YawForceLoc);
+//	//FVector Torque = FVector(0.f, 0.f, YawThrustStrength * Value);
 //
+//	//DroneMesh->AddTorqueInRadians(Torque, NAME_None, true);
+//
+//	//FVector AngVel = DroneMesh->GetPhysicsAngularVelocityInRadians();
+//	//AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f);
+//	//DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel, false);
+//
+//	if (!DroneMesh) return;
+//
+//	// --- Smooth input interpolation (frame-rate independent) ---
+//	CurrentYawInput = FMath::FInterpTo(CurrentYawInput, TargetYawInput, DeltaTime, YawResponseSpeed);
+//
+//	if (FMath::IsNearlyZero(CurrentYawInput)) return;
+//
+//	// --- World-space COM ---
+//	FVector COMWorld = DroneMesh->GetComponentLocation() +
+//		DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset);
+//
+//	// --- Front-of-drone force point (in front of COM) ---
+//	const float ForwardOffsetDistance = 1000.f; // tweak for sensitivity
+//	//YawForceLoc = DroneMesh->GetComponentLocation() + DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset * -1.5f);
+//	FVector ForcePoint = COMWorld + GetActorForwardVector() * ForwardOffsetDistance;
+//
+//	// --- Lateral force to induce yaw ---
+//	FVector LateralForce = GetActorRightVector() * (YawThrustStrength * CurrentYawInput);
+//
+//	// --- Apply force at the point ---
+//	DroneMesh->AddForceAtLocation(LateralForce, ForcePoint);
+//
+//	// --- Clamp angular velocity around Z to prevent spinning too fast ---
 //	FVector AngVel = DroneMesh->GetPhysicsAngularVelocityInRadians();
-//	AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f);      // rad/s limit
+//	AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f); // tweak as needed
 //	DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel, false);
-//}
+//
+//	// --- Optional: update debug orb ---
+//	YawForceLoc = ForcePoint;
+//} //Defunct Yaw Attempts
 
 void ADroneCharacter::ApplyHoverForce() //Apply equal upward force to cancel gravity
 {
