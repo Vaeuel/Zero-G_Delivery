@@ -6,6 +6,8 @@
 #include "GameFramework/Pawn.h"
 #include "DroneCharacter.generated.h"
 
+class AShippingContainer; //Forward declaration?
+
 UCLASS()
 class ZEROGDELIVERY_API ADroneCharacter : public APawn //Need to inherit from a blank controllable Entity if I'm going to build fully physics driven motion.
 {
@@ -13,6 +15,11 @@ class ZEROGDELIVERY_API ADroneCharacter : public APawn //Need to inherit from a 
 
 public:
 	ADroneCharacter(); //Sets default values
+
+	bool bCanGrabInThisZone = false;
+
+	void OnEnterCargoZone();
+	void OnExitCargoZone();
 
 protected:
 	virtual void BeginPlay() override; //Called when the game starts or when spawned
@@ -48,11 +55,26 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stabilization")
 	float LevelingTorque = 200.f;
 
+	UPROPERTY()
+	AShippingContainer* HeldContainer = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "GravityGun")
+	float GrabRange = 3000.f;
+
+	UPROPERTY(EditAnywhere, Category = "GravityGun")
+	float GrabRadius = 400.f;
 
 	void MoveForward(float Value);
 	void MoveStrafe(float Value);
 	void RotateYaw(float Value); //Applies yaw using the Given (Smoothed) Value
 	void OnYawInput(float Value); //Raw axis binding that sets TargetYawInput
+
+	void TryGrab();
+	void ReleaseGrab();
+	void TryDrop();
+	void ReleaseDrop();
+	void PauseMenu();
+	class AShippingContainer* FindContainer();
 
 private:
 	void CalculateCenterOfMass();

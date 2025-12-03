@@ -1,13 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Player/DroneCharacter.h"
-#include "Camera/CameraComponent.h"
+#include "Interactables/ShippingContainer.h"
+
 #include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
-
 #include "DrawDebugHelpers.h"
+#include "GM_ZeroGDeliveryBase.h"
 
-// Sets default values
+//Constructor that sets default values
 ADroneCharacter::ADroneCharacter() //Constructor - Happens when the editor executes and/ or when the code executes during run time. Null* here will generate an infinite loop and crash.
 {
 	bUseControllerRotationYaw = false;
@@ -59,6 +61,14 @@ void ADroneCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAxis("MoveForwardReverse", this, &ADroneCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveStrafe", this, &ADroneCharacter::MoveStrafe);
 	PlayerInputComponent->BindAxis("Turn", this, &ADroneCharacter::OnYawInput); //Bind raw axis to set target
+
+	PlayerInputComponent->BindAction("PickUp", IE_Pressed, this, &ADroneCharacter::TryGrab);
+	PlayerInputComponent->BindAction("PickUp", IE_Released, this, &ADroneCharacter::ReleaseGrab);
+
+	PlayerInputComponent->BindAction("PutDown", IE_Pressed, this, &ADroneCharacter::TryDrop);
+	PlayerInputComponent->BindAction("PutDown", IE_Released, this, &ADroneCharacter::ReleaseDrop);
+
+	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &ADroneCharacter::PauseMenu);
 }
 
 void ADroneCharacter::MoveForward(float Value)
@@ -118,49 +128,6 @@ void ADroneCharacter::OnYawInput(float Value)
 	TargetYawInput = (FMath::Abs(Value) < .1f) ? 0.f : Value; //Adds small deadzone... Adjust based on feel
 }
 
-//void ADroneCharacter::RotateYaw(float DeltaTime)
-//{
-//	//if (FMath::IsNearlyZero(Value)) return;
-//
-//	//FVector Torque = FVector(0.f, 0.f, YawThrustStrength * Value);
-//
-//	//DroneMesh->AddTorqueInRadians(Torque, NAME_None, true);
-//
-//	//FVector AngVel = DroneMesh->GetPhysicsAngularVelocityInRadians();
-//	//AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f);
-//	//DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel, false);
-//
-//	if (!DroneMesh) return;
-//
-//	// --- Smooth input interpolation (frame-rate independent) ---
-//	CurrentYawInput = FMath::FInterpTo(CurrentYawInput, TargetYawInput, DeltaTime, YawResponseSpeed);
-//
-//	if (FMath::IsNearlyZero(CurrentYawInput)) return;
-//
-//	// --- World-space COM ---
-//	FVector COMWorld = DroneMesh->GetComponentLocation() +
-//		DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset);
-//
-//	// --- Front-of-drone force point (in front of COM) ---
-//	const float ForwardOffsetDistance = 1000.f; // tweak for sensitivity
-//	//YawForceLoc = DroneMesh->GetComponentLocation() + DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset * -1.5f);
-//	FVector ForcePoint = COMWorld + GetActorForwardVector() * ForwardOffsetDistance;
-//
-//	// --- Lateral force to induce yaw ---
-//	FVector LateralForce = GetActorRightVector() * (YawThrustStrength * CurrentYawInput);
-//
-//	// --- Apply force at the point ---
-//	DroneMesh->AddForceAtLocation(LateralForce, ForcePoint);
-//
-//	// --- Clamp angular velocity around Z to prevent spinning too fast ---
-//	FVector AngVel = DroneMesh->GetPhysicsAngularVelocityInRadians();
-//	AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f); // tweak as needed
-//	DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel, false);
-//
-//	// --- Optional: update debug orb ---
-//	YawForceLoc = ForcePoint;
-//} //Defunct Yaw Attempts
-
 void ADroneCharacter::ApplyHoverForce() //Apply equal upward force to cancel gravity
 {
 	if (!DroneMesh) return;
@@ -196,4 +163,74 @@ void ADroneCharacter::DebugDrawPhysics()
 	DrawDebugSphere(GetWorld(), WorldCoM, 15.f, 8, FColor::Yellow, false, -1.f, 0, 2.f);
 	DrawDebugSphere(GetWorld(), ForcePoint, 15.f, 8, FColor::Blue, false, -1.f, 0, 2.f);
 	DrawDebugLine(GetWorld(), WorldCoM, ForcePoint, FColor::Cyan, false, -1.f, 0, 1.f);
+}
+
+AShippingContainer* ADroneCharacter::FindContainer()
+{
+	FVector Start = Camera->GetComponentLocation();
+	FVector End = Start + (Camera->GetForwardVector() * GrabRange);
+
+	FHitResult Hit;
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(GrabRadius);
+
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_PhysicsBody,
+		Sphere
+	);
+
+	if (bHit)
+		return Cast<AShippingContainer>(Hit.GetActor());
+
+	return nullptr;
+}
+
+void ADroneCharacter::TryGrab()
+{
+	if (!bCanGrabInThisZone) return;
+
+	if (HeldContainer) return;
+
+	AShippingContainer* Container = FindContainer();
+	if (!Container) return;
+
+	Container->StartGrab(this);
+	HeldContainer = Container;
+}
+
+void ADroneCharacter::ReleaseGrab()
+{
+	if (!HeldContainer) return;
+
+	HeldContainer->StopGrab();
+	HeldContainer = nullptr;
+}
+
+void ADroneCharacter::TryDrop()
+{
+}
+
+void ADroneCharacter::ReleaseDrop()
+{
+}
+
+void ADroneCharacter::PauseMenu()
+{
+	if (auto GameModeRef = Cast<AGM_ZeroGDeliveryBase>(GetWorld()->GetAuthGameMode()))
+	{
+		GameModeRef->TogglePauseMenu();
+	}
+}
+
+void ADroneCharacter::OnEnterCargoZone()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Entered Cargo Zone!"));
+}
+
+void ADroneCharacter::OnExitCargoZone()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Left Cargo Zone!"));
 }
