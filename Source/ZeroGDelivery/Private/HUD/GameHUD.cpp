@@ -2,22 +2,49 @@
 
 
 #include "HUD/GameHUD.h"
+#include "Blueprint/UserWidget.h"
 
 void AGameHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SpawnGameMenu(StartingGameWidget);
+	if (DeliveryHUDClass)
+	{
+		DeliveryHUD = CreateWidget<UGameMenuWidget>(GetWorld(), DeliveryHUDClass);
+		if (DeliveryHUD)
+		{
+			DeliveryHUD->AddToViewport();
+			DeliveryHUD->SetVisibility(ESlateVisibility::Hidden); //Start hidden
+		}
+	}
 }
 
-void AGameHUD::SpawnGameMenu(TSubclassOf<UGameMenuWidget> NewGameMenuWidget)
+void AGameHUD::ToggleDeliveryHUD(bool bVisible)
 {
-	if (GameMenuWidgetContainer)
-	{
-		GameMenuWidgetContainer->RemoveFromParent();
-		GameMenuWidgetContainer = nullptr;
-	}
+	if (!DeliveryHUD) return;
+	DeliveryHUD->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+}
 
-	GameMenuWidgetContainer = CreateWidget<UGameMenuWidget>(GetWorld(), NewGameMenuWidget);
-	GameMenuWidgetContainer->AddToViewport();
+void AGameHUD::UpdateScore(int32 Score)
+{
+	if (DeliveryHUD)
+		DeliveryHUD->SetScoreText(Score);
+}
+
+void AGameHUD::UpdateTimer(float TimeRemaining)
+{
+	if (DeliveryHUD)
+		DeliveryHUD->SetTimerText(TimeRemaining);
+}
+
+void AGameHUD::UpdateContainerHealth(int32 HealthPercent)
+{
+	if (DeliveryHUD)
+		DeliveryHUD->UpdateCargoIntegrity(HealthPercent);
+}
+
+void AGameHUD::AddCargoScore(int FinalCargoScore)
+{
+	if (DeliveryHUD)
+		DeliveryHUD->SetCargoScore(FinalCargoScore);
 }

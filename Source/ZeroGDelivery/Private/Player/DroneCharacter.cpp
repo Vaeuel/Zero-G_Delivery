@@ -6,6 +6,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/DecalComponent.h"
 #include "DrawDebugHelpers.h"
 #include "GM_ZeroGDeliveryBase.h"
 
@@ -29,6 +30,13 @@ ADroneCharacter::ADroneCharacter() //Constructor - Happens when the editor execu
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
+
+
+	LandingShadowDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("LandingShadow"));
+	LandingShadowDecal->SetupAttachment(DroneMesh);
+
+	LandingShadowDecal->DecalSize = FVector(400.f, 300.f, 200.f);
+	LandingShadowDecal->SetVisibility(false); //hidden until needed
 }
 
 // Called when the game starts or when spawned
@@ -44,6 +52,52 @@ void ADroneCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	ApplyHoverForce(); //Neutralize gravity and maintain vertical lock
 	StabilizeUpright(); //Keep drone Upright (No pitch/roll drift)
+
+	const FRotator DefaultArmRot = FRotator(-15.f, 0.f, 0.f);
+	const FRotator DefaultCamRot = FRotator(5.f, 0.f, 0.f);
+
+	const FRotator CargoArmRot = FRotator(-50.f, 0.f, 0.f);
+	const FRotator CargoCamRot = FRotator(-30.f, 0.f, 0.f);
+
+	const FRotator TargetArmRot = IsGravityGunActive ? CargoArmRot : DefaultArmRot;
+	const FRotator TargetCamRot = IsGravityGunActive ? CargoCamRot : DefaultCamRot;
+	
+	LandingShadowDecal->SetVisibility(IsGravityGunActive);
+
+	if (LandingShadowDecal->IsVisible())
+	{
+		FVector Start = DroneMesh->GetComponentLocation();
+		FVector End = Start + FVector(0, 0, -5000.f);
+
+		FHitResult Hit;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+		{
+			LandingShadowDecal->SetWorldLocation(Hit.Location + Hit.Normal * 2.f);
+
+			FRotator DecalRot = Hit.Normal.Rotation();
+			DecalRot.Roll += 180.f; //decals face backwards
+			LandingShadowDecal->SetWorldRotation(DecalRot);
+
+			AShippingContainer* ContainerUnderDrone = Cast<AShippingContainer>(Hit.GetActor());
+
+			if (ContainerUnderDrone) TargetContainer = ContainerUnderDrone;
+
+			else TargetContainer = nullptr;
+		}
+	}
+
+	const float InterpSpeed = 1.5f;
+
+	SpringArm->SetRelativeRotation(
+		FMath::RInterpTo(SpringArm->GetRelativeRotation(), TargetArmRot, DeltaTime, InterpSpeed)
+	);
+
+	Camera->SetRelativeRotation(
+		FMath::RInterpTo(Camera->GetRelativeRotation(), TargetCamRot, DeltaTime, InterpSpeed)
+	);
 
 	CurrentYawInput = FMath::Lerp(CurrentYawInput, TargetYawInput, 0.002f);
 	//CurrentYawInput = FMath::FInterpTo(CurrentYawInput, TargetYawInput, DeltaTime, YawResponseSpeed);
@@ -79,8 +133,6 @@ void ADroneCharacter::MoveForward(float Value)
 	Dir.Z = 0.f;
 	Dir.Normalize();
 
-	//FVector Offset = GetActorForwardVector() * 100.f; //Don't think I need this. Must test.
-	//DroneMesh->AddForceAtLocation(Force, DroneMesh->GetComponentLocation() + Offset); //Can use this and the above for turning.
 	FVector Force = Dir * (ThrustStrength * Value);
 	DroneMesh->AddForce(Force);
 }
@@ -165,56 +217,36 @@ void ADroneCharacter::DebugDrawPhysics()
 	DrawDebugLine(GetWorld(), WorldCoM, ForcePoint, FColor::Cyan, false, -1.f, 0, 1.f);
 }
 
-AShippingContainer* ADroneCharacter::FindContainer()
-{
-	FVector Start = Camera->GetComponentLocation();
-	FVector End = Start + (Camera->GetForwardVector() * GrabRange);
-
-	FHitResult Hit;
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(GrabRadius);
-
-	bool bHit = GetWorld()->SweepSingleByChannel(
-		Hit,
-		Start,
-		End,
-		FQuat::Identity,
-		ECC_PhysicsBody,
-		Sphere
-	);
-
-	if (bHit)
-		return Cast<AShippingContainer>(Hit.GetActor());
-
-	return nullptr;
-}
-
 void ADroneCharacter::TryGrab()
 {
-	if (!bCanGrabInThisZone) return;
+	if (!IsGravityGunActive) return; //Not in cargo zone
+	if (HeldContainer) return; //Already holding cargo
+	if (!TargetContainer) return; //Nothing detected below the drone
 
-	if (HeldContainer) return;
-
-	AShippingContainer* Container = FindContainer();
-	if (!Container) return;
-
-	Container->StartGrab(this);
-	HeldContainer = Container;
+	TargetContainer->StartGravityGun(this);
 }
 
 void ADroneCharacter::ReleaseGrab()
 {
-	if (!HeldContainer) return;
+	if (HeldContainer || !TargetContainer) return; //Container is already attached
 
-	HeldContainer->StopGrab();
-	HeldContainer = nullptr;
+	TargetContainer->StartGravity();
 }
 
 void ADroneCharacter::TryDrop()
 {
+	if (!HeldContainer && !IsCanLower) return; //No container to drop
+
+	TargetContainer->IsLowering = true;
+	//TargetContainer->LowerCargo();
 }
 
 void ADroneCharacter::ReleaseDrop()
 {
+	if (!IsCanLower) return; //No container to drop **Logic is wrong
+
+	TargetContainer->IsLowering = false;
+	//TargetContainer->StartGravity(); //Not Needed
 }
 
 void ADroneCharacter::PauseMenu()
@@ -223,14 +255,4 @@ void ADroneCharacter::PauseMenu()
 	{
 		GameModeRef->TogglePauseMenu();
 	}
-}
-
-void ADroneCharacter::OnEnterCargoZone()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Entered Cargo Zone!"));
-}
-
-void ADroneCharacter::OnExitCargoZone()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Left Cargo Zone!"));
 }

@@ -11,15 +11,6 @@ void UGameMenuWidget::NativeConstruct()
 	SetScoreText(0);
 	SetTimerText(60);
 	SetCargoScore(250); //Base Score 100 linked to integrity, 50 for prestine, and 100 for timely delivery (40Seconds to deliver and 5 points /second deducted for late fees?).
-
-	//for (int i = 0; i < 3; i++)
-	//{
-	//	UUserWidget* Widget = CreateWidget(this, ButtonWidgetClass);
-	//	ButtonContainer->AddChild(Widget);
-
-	//	UButtonWidget* Button = Cast<UButtonWidget>(Widget);
-	//	Button->SetText(i);
-	//}
 }
 
 void UGameMenuWidget::UpdateCargoIntegrity(float IntegrityPercent)

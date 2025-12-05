@@ -2,6 +2,8 @@
 
 
 #include "Interactables/ShippingContainer.h"
+#include "GM_ZeroGDeliveryBase.h"
+#include <Player/DroneCharacter.h>
 
 // Sets default values
 AShippingContainer::AShippingContainer()
@@ -10,7 +12,8 @@ AShippingContainer::AShippingContainer()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
-
+	Mesh->BodyInstance.bUseCCD = true;
+	Mesh->SetGenerateOverlapEvents(true);
 	Mesh->SetSimulatePhysics(true);
 	Mesh->SetLinearDamping(0.4f);
 	Mesh->SetAngularDamping(0.8f);
@@ -30,54 +33,119 @@ void AShippingContainer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bBeingPulled && PullingDrone && !bAttached)
+	if (IsBeingPulled && HeldByDrone && !IsAttached) ApplyPickupForce(DeltaTime);
+
+	if (CanAttach && !IsAttached && !IsLowering) ToggleAttachment(HeldByDrone);
+
+	if (IsLowering) LowerCargo();
+
+	if (IsDelivered) EndLife();
+}
+
+void AShippingContainer::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	if (OtherActor && OtherActor == HeldByDrone) CanAttach = true;
+}
+
+void AShippingContainer::ToggleAttachment(AActor* Drone)
+{
+	if (!Drone) return;
+	IsAttached = !IsAttached;
+	
+	Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
+	Mesh->SetSimulatePhysics(!IsAttached);
+
+	if (IsAttached)
 	{
-		ApplyPickupForce(DeltaTime);
+		AttachToActor(Drone, FAttachmentTransformRules::KeepWorldTransform);
+		if (Drone) HeldByDrone->HeldContainer = this;
+		CanAttach = false;
+		StartTimer();
+	}
 
-		// Check if close enough to attach
-		float Dist = FVector::Dist(GetActorLocation(), PullingDrone->GetActorLocation());
-		if (Dist < 150.f)
-		{
-			bAttached = true;
-			bBeingPulled = false;
-
-			Mesh->SetSimulatePhysics(false);
-			AttachToActor(PullingDrone, FAttachmentTransformRules::KeepWorldTransform);
-		}
+	else
+	{
+		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		if (Drone) HeldByDrone->HeldContainer = nullptr;
 	}
 }
 
-void AShippingContainer::StartGrab(AActor * InDrone)
+void AShippingContainer::StartGravityGun(AActor * InDrone)
 {
-	if (bAttached) return;
-
-	PullingDrone = InDrone;
-	bBeingPulled = true;
+	if (IsAttached) return;
+	if (!HeldByDrone)
+	{
+		ADroneCharacter* DroneRef = Cast<ADroneCharacter>(InDrone);
+		if (!DroneRef) return;
+		HeldByDrone = DroneRef; //Must add Clear later when teh container is delivered/destroyed **HeldByDrone = nullptr;
+	}
+	IsBeingPulled = true;
+	IsLowering = false;
 }
 
-void AShippingContainer::StopGrab()
+void AShippingContainer::StartGravity() //Need to modify to ignore -Velocity
 {
-	if (!bAttached) return;
+	if (IsAttached) return;
+	if (!Mesh) return;
 
-	bAttached = false;
-	PullingDrone = nullptr;
+	IsBeingPulled = false;
 
-	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	Mesh->SetSimulatePhysics(true);
+	Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
+}
+
+void AShippingContainer::LowerCargo()
+{
+	if (!Mesh) return;
+	//IsLowering = true;
+
+	if(IsAttached && HeldByDrone)
+	{
+		HeldByDrone->IsCanLower = true;
+		ToggleAttachment(HeldByDrone);
+		StartGravity();
+	}
+	//IsAttached = false;
+	FVector LiftForce = CalculateLift(.9f);
+	Mesh->AddForce(LiftForce);
 }
 
 void AShippingContainer::ApplyPickupForce(float DeltaTime)
 {
-	FVector ToDrone = PullingDrone->GetActorLocation() - GetActorLocation();
+	if (!HeldByDrone) return;
+	if (!Mesh) return;
 
-	// Always pull upward
-	if (ToDrone.Z < 50.f)
-		ToDrone.Z = 50.f;
-
+	FVector ToDrone = HeldByDrone->GetActorLocation() - GetActorLocation();
 	FVector ForceDir = ToDrone.GetSafeNormal();
+	FVector LiftForce = CalculateLift(1.3f);
+
+	PickupForce = LiftForce.Z * .2f;
 	FVector Force = ForceDir * PickupForce;
 
+	Mesh->AddForce(LiftForce);
 	Mesh->AddForce(Force);
+}
+
+FVector AShippingContainer::CalculateLift(float Multiplier)
+{
+	const float Gravity = GetWorld()->GetGravityZ();
+	const float Mass = Mesh->GetMass();
+
+	float LiftAmount = (-Gravity * Mass) * Multiplier;
+	return FVector(0, 0, LiftAmount);
+}
+
+void AShippingContainer::StartTimer()
+{
+	AGM_ZeroGDeliveryBase* GM = Cast<AGM_ZeroGDeliveryBase>(GetWorld()->GetAuthGameMode());
+	if (GM) GM->IsTimerRunning = true;
+}
+
+void AShippingContainer::EndLife()
+{
+	HeldByDrone->IsGravityGunActive = false;
+	HeldByDrone->HeldContainer = nullptr;
+	//Reset or destroy?
 }
 
 void AShippingContainer::OnHit(
@@ -87,7 +155,7 @@ void AShippingContainer::OnHit(
 	FVector NormalImpulse,
 	const FHitResult & Hit)
 {
-	if (OtherActor == PullingDrone) return; //Ignore drone contact
+	if (OtherActor == HeldByDrone) return; //Ignore drone contact
 
 	float Impact = NormalImpulse.Size();
 	float Damage = Impact * DamageMultiplier;

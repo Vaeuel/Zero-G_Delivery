@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "ScoreGameInstance.h"
 #include "GUI/EndGameWidget.h"
+#include "HUD/GameHUD.h"
 #include "Interactables/ShippingContainer.h"
 #include "GameFramework/PlayerController.h"
 #include "Blueprint/UserWidget.h"
@@ -43,9 +44,25 @@ void AGM_ZeroGDeliveryBase::StartPlay() //Must be defined by two colons "::"
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AShippingContainer::StaticClass(), Containers);
 	DeliveryGoal = Containers.Num();
 
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (PC) CachedGameHUD = Cast<AGameHUD>(PC->GetHUD());
+
 	UE_LOG(LogTemp, Log, TEXT("Delivery Goal set to %d"), DeliveryGoal);
 
 	UE_LOG(LogTemp, Log, TEXT("ZeroG GameMode: StartPlay() called. Game initialized."));
+}
+
+void AGM_ZeroGDeliveryBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (IsTimerRunning && CachedGameHUD)
+	{
+		TimeRemaining -= DeltaTime;
+		if (TimeRemaining < 0.f) TimeRemaining = 0.f;
+
+		CachedGameHUD->UpdateTimer(TimeRemaining);
+	}
 }
 
 void AGM_ZeroGDeliveryBase::TogglePauseMenu()
@@ -73,8 +90,9 @@ void AGM_ZeroGDeliveryBase::TogglePauseMenu()
 
 		// Enable mouse + UI Input
 		PC->SetShowMouseCursor(true);
-		PC->SetInputMode(FInputModeUIOnly());
+		PC->SetInputMode(FInputModeUIOnly()); //Blocking the ability to press Q to unpause?
 	}
+
 	else
 	{
 		// Unpause the world
@@ -91,28 +109,54 @@ void AGM_ZeroGDeliveryBase::TogglePauseMenu()
 		PC->SetInputMode(FInputModeGameOnly());
 	}
 
-
 }
 
 void AGM_ZeroGDeliveryBase::AddScore(int32 Amount)
 {
 	CurrentScore += Amount;
-	// clamp to non-negative if you want:
+
 	if (CurrentScore < 0) CurrentScore = 0;
 
 	// Optionally broadcast to UI via BlueprintImplementableEvent or delegate
 	UE_LOG(LogTemp, Log, TEXT("Score updated: %d"), CurrentScore);
 }
 
-void AGM_ZeroGDeliveryBase::SetScore(int32 NewScore)
-{
-	CurrentScore = NewScore;
-	if (CurrentScore < 0) CurrentScore = 0;
-}
+//void AGM_ZeroGDeliveryBase::SetScore(int32 NewScore)
+//{
+//	CurrentScore = NewScore;
+//	if (CurrentScore < 0) CurrentScore = 0;
+//}
 
 int32 AGM_ZeroGDeliveryBase::GetScore() const
 {
 	return CurrentScore;
+}
+
+void AGM_ZeroGDeliveryBase::ReportDelivery(int HealthPercent)
+{
+	IsTimerRunning = false; //Stop timer
+
+	int32 Score = HealthPercent; //base
+
+	if (HealthPercent == 100.f) Score += 50;
+
+	if (TimeRemaining > 20.f) Score += 100;
+
+	else
+	{
+		float Over = FMath::Abs(TimeRemaining);
+		int32 Penalty = FMath::RoundToInt(Over * 5.f);
+		Score += Penalty;
+	}
+
+	AddScore(Score);
+
+	DeliveriesMade++;
+
+	if (CachedGameHUD) CachedGameHUD->UpdateScore(CurrentScore);
+
+	UE_LOG(LogTemp, Log, TEXT("Delivery complete. Score added: %d"), Score);
+	TimeRemaining = 60.0f; //Reset timer
 }
 
 void AGM_ZeroGDeliveryBase::CheckForEndGame()
@@ -150,4 +194,11 @@ void AGM_ZeroGDeliveryBase::CheckForEndGame()
 			}
 		}
 	}
+}
+
+void AGM_ZeroGDeliveryBase::ShowHUD(bool IsShowing)
+{
+	if (!CachedGameHUD) return;
+
+	CachedGameHUD->ToggleDeliveryHUD(IsShowing);
 }

@@ -27,22 +27,33 @@ protected:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Score")
     int32 DeliveryGoal = 0;
 
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Score")
+    float TimeRemaining = 60.0f;
+
 public:
 	virtual void StartPlay() override; //Find over rides in documentation
-
+    virtual void Tick(float DeltaTime) override;
 	void TogglePauseMenu();
+
+    bool IsTimerRunning = false;
 
     UFUNCTION(BlueprintCallable, Category = "Score")
     void AddScore(int32 Amount);
 
-    UFUNCTION(BlueprintCallable, Category = "Score")
-    void SetScore(int32 NewScore);
+    //UFUNCTION(BlueprintCallable, Category = "Score")
+    //void SetScore(int32 NewScore);
 
     UFUNCTION(BlueprintCallable, Category = "Score")
     int32 GetScore() const;
 
     UFUNCTION(BlueprintCallable, Category = "Score")
+    void ReportDelivery(int HealthPercent);
+
+    UFUNCTION(BlueprintCallable, Category = "Score")
     void CheckForEndGame();
+
+    UFUNCTION(Category = "UI")
+    void ShowHUD(bool IsShowing);
 
 	UPROPERTY(EditAnywhere, Category="UI")
 	TSubclassOf<class UUserWidget> PauseMenuClass; //Must be assigned in editor
@@ -53,6 +64,9 @@ public:
 private:
 	UPROPERTY()
 	class UUserWidget* PauseMenuInstance = nullptr;
+
+    UPROPERTY()
+    class AGameHUD* CachedGameHUD = nullptr;
 
     UPROPERTY()
     UUserWidget* EndGameMenuInstance = nullptr;

@@ -19,8 +19,21 @@ public:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UGameMenuWidget> StartingGameWidget;
-	UGameMenuWidget* GameMenuWidgetContainer;
+	TSubclassOf<UGameMenuWidget> DeliveryHUDClass;
+	UGameMenuWidget* DeliveryHUD;
 
-	void SpawnGameMenu(TSubclassOf<UGameMenuWidget> NewGameMenuWidget);
+	UFUNCTION()
+	void ToggleDeliveryHUD(bool bVisible);
+
+	UFUNCTION()
+	void UpdateScore(int32 Score);
+
+	UFUNCTION()
+	void UpdateTimer(float TimeRemaining);
+
+	UFUNCTION()
+	void UpdateContainerHealth(int32 HealthPercent);
+
+	UFUNCTION()
+	void AddCargoScore(int FinalCargoScore);
 };

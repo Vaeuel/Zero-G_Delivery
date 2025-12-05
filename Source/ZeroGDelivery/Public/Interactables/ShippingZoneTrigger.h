@@ -17,8 +17,14 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY()
+	class AGM_ZeroGDeliveryBase* GM = nullptr;
+
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* TriggerBox;
+
+	UPROPERTY(VisibleAnywhere)
+	class UBoxComponent* DeliveryBox;
 
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* VisualMesh;
@@ -31,4 +37,8 @@ protected:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 BodyIndex);
+
+	UFUNCTION()
+	void OnDeliveryBoxOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 BodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
