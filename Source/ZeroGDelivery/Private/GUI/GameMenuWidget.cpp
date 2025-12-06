@@ -40,6 +40,6 @@ void UGameMenuWidget::SetTimerText(int Timer)
 {
 	if (!TimerText) return;
 
-	UITimer += Timer;
+	UITimer = Timer;
 	TimerText->SetText(FText::FromString(FString::Printf(TEXT("Time Left: %d"), UITimer)));
 }

@@ -20,14 +20,20 @@ protected:
 	UPROPERTY()
 	class AGM_ZeroGDeliveryBase* GM = nullptr;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class USceneComponent* Root;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UBoxComponent* TriggerBox;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Delivery")
 	class UBoxComponent* DeliveryBox;
 
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* VisualMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Delivery")
+	bool IsDeliveryPoint = false;
 
 	// Events
 	UFUNCTION()
@@ -41,4 +47,7 @@ protected:
 	UFUNCTION()
 	void OnDeliveryBoxOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 BodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void InitBindings();
 };

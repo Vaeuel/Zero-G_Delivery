@@ -25,6 +25,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug")
 	AShippingContainer* HeldContainer = nullptr;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug")
+	AShippingContainer* TargetContainer = nullptr;
+
 protected:
 	virtual void BeginPlay() override; //Called when the game starts or when spawned
 	virtual void Tick(float DeltaTime) override; //Called every frame
@@ -39,16 +42,19 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* Camera;
 
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	//class UBoxComponent* DroneCollider;
+
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float ThrustStrength = 400.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float YawThrustStrength = .02f;
+	float YawThrustStrength = 1.0f;
 
 	FVector YawForceLoc = FVector::ZeroVector;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float YawResponseSpeed = 4.f;
+	float YawResponseSpeed = 3.f; //Effects how abruptly the rotation stops VIA interp to
 
 	float CurrentYawInput = 0.f;
 	float TargetYawInput = 0.f;
@@ -67,9 +73,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	class UDecalComponent* LandingShadowDecal;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug")
-	AShippingContainer* TargetContainer = nullptr;
 
 	void MoveForward(float Value);
 	void MoveStrafe(float Value);

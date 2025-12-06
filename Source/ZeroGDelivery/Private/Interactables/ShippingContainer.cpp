@@ -60,6 +60,7 @@ void AShippingContainer::ToggleAttachment(AActor* Drone)
 		AttachToActor(Drone, FAttachmentTransformRules::KeepWorldTransform);
 		if (Drone) HeldByDrone->HeldContainer = this;
 		CanAttach = false;
+		HeldByDrone->IsCanLower = false;
 		StartTimer();
 	}
 
@@ -143,9 +144,22 @@ void AShippingContainer::StartTimer()
 
 void AShippingContainer::EndLife()
 {
-	HeldByDrone->IsGravityGunActive = false;
-	HeldByDrone->HeldContainer = nullptr;
-	//Reset or destroy?
+	if (HeldByDrone)
+	{
+		HeldByDrone->IsGravityGunActive = false;
+		HeldByDrone->IsCanLower = false;
+		HeldByDrone->TargetContainer = nullptr;
+		HeldByDrone = nullptr;
+	}
+
+	IsLowering = false;
+
+	GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AShippingContainer::DestroySelf, 1.5f, false);
+}
+
+void AShippingContainer::DestroySelf()
+{
+	Destroy();
 }
 
 void AShippingContainer::OnHit(

@@ -29,10 +29,10 @@ public:
 	void UpdateScore(int32 Score);
 
 	UFUNCTION()
-	void UpdateTimer(float TimeRemaining);
+	void UpdateTimer(int32 TimeRemaining);
 
 	UFUNCTION()
-	void UpdateContainerHealth(int32 HealthPercent);
+	void UpdateContainerHealth(float HealthPercent);
 
 	UFUNCTION()
 	void AddCargoScore(int FinalCargoScore);

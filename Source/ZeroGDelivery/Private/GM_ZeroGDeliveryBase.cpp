@@ -10,6 +10,12 @@
 #include "GameFramework/PlayerController.h"
 #include "Blueprint/UserWidget.h"
 
+AGM_ZeroGDeliveryBase::AGM_ZeroGDeliveryBase()
+{
+	PrimaryActorTick.bCanEverTick = true; //GM!= Actor, therefore Tick is off by Default
+	PrimaryActorTick.bStartWithTickEnabled = true;
+}
+
 void AGM_ZeroGDeliveryBase::StartPlay() //Must be defined by two colons "::"
 {
 	Super::StartPlay(); //Must call the parent function using "Super" plus the function name. Not sure why this language requires a function call within the function.
@@ -39,7 +45,7 @@ void AGM_ZeroGDeliveryBase::StartPlay() //Must be defined by two colons "::"
 	//UE_LOGFMT(LogTemp, Warning, "testNumber: {0}, testFloat: {1}, testName: {2}", testNumber, testFloat, "Drew");
 	CurrentScore = 0;
 	DeliveriesMade = 0;
-
+	
 	TArray<AActor*> Containers;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AShippingContainer::StaticClass(), Containers);
 	DeliveryGoal = Containers.Num();
@@ -50,6 +56,11 @@ void AGM_ZeroGDeliveryBase::StartPlay() //Must be defined by two colons "::"
 	UE_LOG(LogTemp, Log, TEXT("Delivery Goal set to %d"), DeliveryGoal);
 
 	UE_LOG(LogTemp, Log, TEXT("ZeroG GameMode: StartPlay() called. Game initialized."));
+
+	if (CachedGameHUD)
+		UE_LOG(LogTemp, Warning, TEXT("GM ZeroGBase: StartPlay: GameHUD successfully cached"));
+	if (!CachedGameHUD)
+		UE_LOG(LogTemp, Error, TEXT("FAILED TO CACHE GameHUD"));
 }
 
 void AGM_ZeroGDeliveryBase::Tick(float DeltaTime)
@@ -61,7 +72,7 @@ void AGM_ZeroGDeliveryBase::Tick(float DeltaTime)
 		TimeRemaining -= DeltaTime;
 		if (TimeRemaining < 0.f) TimeRemaining = 0.f;
 
-		CachedGameHUD->UpdateTimer(TimeRemaining);
+		CachedGameHUD->UpdateTimer(FMath::RoundToInt(TimeRemaining));
 	}
 }
 

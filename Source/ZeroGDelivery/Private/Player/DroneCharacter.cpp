@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/DecalComponent.h"
+#include "Components/BoxComponent.h"
 #include "DrawDebugHelpers.h"
 #include "GM_ZeroGDeliveryBase.h"
 
@@ -31,6 +32,13 @@ ADroneCharacter::ADroneCharacter() //Constructor - Happens when the editor execu
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 
+	//DroneCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("DroneCollider"));
+	//DroneCollider->SetupAttachment(DroneMesh);
+	////DroneCollider->SetRelativeLocation(FVector::ZeroVector);
+	//DroneCollider->InitBoxExtent(FVector(400.f, 300.f, 100.f));
+	////DroneCollider->SetRelativeScale3D(FVector(20.f, 10.f, 20.f));
+	//DroneCollider->SetCollisionProfileName("Drone");
+	//DroneCollider->SetGenerateOverlapEvents(true);
 
 	LandingShadowDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("LandingShadow"));
 	LandingShadowDecal->SetupAttachment(DroneMesh);
@@ -99,8 +107,8 @@ void ADroneCharacter::Tick(float DeltaTime)
 		FMath::RInterpTo(Camera->GetRelativeRotation(), TargetCamRot, DeltaTime, InterpSpeed)
 	);
 
-	CurrentYawInput = FMath::Lerp(CurrentYawInput, TargetYawInput, 0.002f);
-	//CurrentYawInput = FMath::FInterpTo(CurrentYawInput, TargetYawInput, DeltaTime, YawResponseSpeed);
+	//CurrentYawInput = FMath::Lerp(CurrentYawInput, TargetYawInput, 0.002f);
+	CurrentYawInput = FMath::FInterpTo(CurrentYawInput, TargetYawInput, DeltaTime, YawResponseSpeed);
 
 	RotateYaw(CurrentYawInput);
 	DebugDrawPhysics();
@@ -164,20 +172,28 @@ void ADroneCharacter::CalculateCenterOfMass()
 
 void ADroneCharacter::RotateYaw(float Value)
 {
-	if (FMath::IsNearlyZero(Value)) return;
+	if (FMath::IsNearlyZero(Value))
+	{
+		FVector AngVel = DroneMesh->GetPhysicsAngularVelocityInRadians();
+		AngVel.Z *= 0.97f; //Damping factor ** Lower Values take off more speed/ tick? Higher values make for floaty rotation
+		DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel);
+		return;
+	}
 
-	FVector Force = GetActorRightVector() * (YawThrustStrength * Value);
-	YawForceLoc = DroneMesh->GetComponentLocation() + DroneMesh->GetComponentTransform().TransformVector(CenterOfMassOffset * -1.5f);
-	DroneMesh->AddForceAtLocation(Force, YawForceLoc);
+	const float TorqueAmount = YawThrustStrength * Value;
+
+	FVector Torque(0.f, 0.f, TorqueAmount);
+	DroneMesh->AddTorqueInRadians(Torque);
 
 	FVector AngVel = DroneMesh->GetPhysicsAngularVelocityInRadians();
-	AngVel.Z = FMath::Clamp(AngVel.Z, -2.f, 2.f); //rad/s limit
-	DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel, false);
+	AngVel.Z = FMath::Clamp(AngVel.Z, -20.f, 20.f);
+
+	DroneMesh->SetPhysicsAngularVelocityInRadians(AngVel);
 }
 
 void ADroneCharacter::OnYawInput(float Value)
 {
-	TargetYawInput = (FMath::Abs(Value) < .1f) ? 0.f : Value; //Adds small deadzone... Adjust based on feel
+	TargetYawInput = (FMath::Abs(Value) < .05f) ? 0.f : Value; //Adds small deadzone... Adjust based on feel
 }
 
 void ADroneCharacter::ApplyHoverForce() //Apply equal upward force to cancel gravity
@@ -238,15 +254,13 @@ void ADroneCharacter::TryDrop()
 	if (!HeldContainer && !IsCanLower) return; //No container to drop
 
 	TargetContainer->IsLowering = true;
-	//TargetContainer->LowerCargo();
 }
 
 void ADroneCharacter::ReleaseDrop()
 {
-	if (!IsCanLower) return; //No container to drop **Logic is wrong
+	if (!IsCanLower) return; //I can lower so I can drop
 
 	TargetContainer->IsLowering = false;
-	//TargetContainer->StartGravity(); //Not Needed
 }
 
 void ADroneCharacter::PauseMenu()

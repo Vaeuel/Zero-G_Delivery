@@ -31,10 +31,12 @@ protected:
     float TimeRemaining = 60.0f;
 
 public:
+    AGM_ZeroGDeliveryBase();
 	virtual void StartPlay() override; //Find over rides in documentation
     virtual void Tick(float DeltaTime) override;
 	void TogglePauseMenu();
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug")
     bool IsTimerRunning = false;
 
     UFUNCTION(BlueprintCallable, Category = "Score")

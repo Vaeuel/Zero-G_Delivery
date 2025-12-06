@@ -51,6 +51,9 @@ protected:
 	UPROPERTY()
 	ADroneCharacter* HeldByDrone = nullptr;
 
+	UPROPERTY()
+	FTimerHandle DestroyTimerHandle;
+
 	UPROPERTY(EditAnywhere, Category = "Container")
 	float MaxHealth = 100.f;
 
@@ -71,6 +74,7 @@ private:
 	void ToggleAttachment(AActor* Drone);
 	void StartTimer();
 	void EndLife();
+	void DestroySelf();
 
 	// Collision handling
 	UFUNCTION()
