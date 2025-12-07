@@ -63,12 +63,12 @@ public:
     UPROPERTY(EditAnywhere, Category = "UI")
     TSubclassOf<UUserWidget> EndGameMenuClass;
 
+    UPROPERTY()
+    class AGameHUD* CachedGameHUD = nullptr;
 private:
 	UPROPERTY()
 	class UUserWidget* PauseMenuInstance = nullptr;
 
-    UPROPERTY()
-    class AGameHUD* CachedGameHUD = nullptr;
 
     UPROPERTY()
     UUserWidget* EndGameMenuInstance = nullptr;

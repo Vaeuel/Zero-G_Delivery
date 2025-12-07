@@ -3,6 +3,7 @@
 
 #include "Interactables/ShippingContainer.h"
 #include "GM_ZeroGDeliveryBase.h"
+#include "HUD/GameHUD.h"
 #include <Player/DroneCharacter.h>
 
 // Sets default values
@@ -27,6 +28,8 @@ AShippingContainer::AShippingContainer()
 void AShippingContainer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GM = Cast<AGM_ZeroGDeliveryBase>(GetWorld()->GetAuthGameMode());
 }
 
 void AShippingContainer::Tick(float DeltaTime)
@@ -40,6 +43,8 @@ void AShippingContainer::Tick(float DeltaTime)
 	if (IsLowering) LowerCargo();
 
 	if (IsDelivered) EndLife();
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("ShippingContainer: Tick: Container Health: %.2f"), GetHealthPercent()));
 }
 
 void AShippingContainer::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -53,12 +58,12 @@ void AShippingContainer::ToggleAttachment(AActor* Drone)
 	IsAttached = !IsAttached;
 	
 	Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
-	Mesh->SetSimulatePhysics(!IsAttached);
+	//Mesh->SetSimulatePhysics(!IsAttached);
 
 	if (IsAttached)
 	{
-		AttachToActor(Drone, FAttachmentTransformRules::KeepWorldTransform);
 		if (Drone) HeldByDrone->HeldContainer = this;
+		HeldByDrone->ToggleContainerLock(IsAttached);
 		CanAttach = false;
 		HeldByDrone->IsCanLower = false;
 		StartTimer();
@@ -66,7 +71,7 @@ void AShippingContainer::ToggleAttachment(AActor* Drone)
 
 	else
 	{
-		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		HeldByDrone->ToggleContainerLock(IsAttached);
 		if (Drone) HeldByDrone->HeldContainer = nullptr;
 	}
 }
@@ -138,7 +143,7 @@ FVector AShippingContainer::CalculateLift(float Multiplier)
 
 void AShippingContainer::StartTimer()
 {
-	AGM_ZeroGDeliveryBase* GM = Cast<AGM_ZeroGDeliveryBase>(GetWorld()->GetAuthGameMode());
+	//AGM_ZeroGDeliveryBase* GM = Cast<AGM_ZeroGDeliveryBase>(GetWorld()->GetAuthGameMode());
 	if (GM) GM->IsTimerRunning = true;
 }
 
@@ -162,13 +167,17 @@ void AShippingContainer::DestroySelf()
 	Destroy();
 }
 
-void AShippingContainer::OnHit(
-	UPrimitiveComponent * HitComp,
-	AActor * OtherActor,
-	UPrimitiveComponent * OtherComp,
-	FVector NormalImpulse,
-	const FHitResult & Hit)
+void AShippingContainer::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor,
+	UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
 {
+	float ImpactVelocity = Mesh->GetComponentVelocity().Size();
+	const float MinImpactVelocity = 150.f; //Should prevent Spam collisions if set correctly
+	if (ImpactVelocity < MinImpactVelocity) return;
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("ShippingContainer: OnHit is triggered!"));
+
+	GM->CachedGameHUD->UpdateContainerHealth(GetHealthPercent());
+
 	if (OtherActor == HeldByDrone) return; //Ignore drone contact
 
 	float Impact = NormalImpulse.Size();

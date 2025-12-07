@@ -41,12 +41,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug")
 	bool CanAttach = false;
 
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* Mesh;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* Mesh;
+	UPROPERTY()
+	class AGM_ZeroGDeliveryBase* GM = nullptr;
 
 	UPROPERTY()
 	ADroneCharacter* HeldByDrone = nullptr;
@@ -61,7 +63,7 @@ protected:
 	float PickupForce = 0.f;   //upward physics force toward drone
 
 	UPROPERTY(EditAnywhere, Category = "Container")
-	float DamageMultiplier = 0.02f;
+	float DamageMultiplier = 0.002f;
 
 private:
 	float CurrentHealth;

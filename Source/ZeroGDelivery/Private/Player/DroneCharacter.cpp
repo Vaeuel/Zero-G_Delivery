@@ -32,13 +32,7 @@ ADroneCharacter::ADroneCharacter() //Constructor - Happens when the editor execu
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 
-	//DroneCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("DroneCollider"));
-	//DroneCollider->SetupAttachment(DroneMesh);
-	////DroneCollider->SetRelativeLocation(FVector::ZeroVector);
-	//DroneCollider->InitBoxExtent(FVector(400.f, 300.f, 100.f));
-	////DroneCollider->SetRelativeScale3D(FVector(20.f, 10.f, 20.f));
-	//DroneCollider->SetCollisionProfileName("Drone");
-	//DroneCollider->SetGenerateOverlapEvents(true);
+	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PhysicsHandle"));
 
 	LandingShadowDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("LandingShadow"));
 	LandingShadowDecal->SetupAttachment(DroneMesh);
@@ -95,6 +89,26 @@ void ADroneCharacter::Tick(float DeltaTime)
 
 			else TargetContainer = nullptr;
 		}
+	}
+
+	if (PhysicsHandle->GetGrabbedComponent())
+	{
+		FTransform TargetWorld = CargoOffset * GetActorTransform(); //World transform relative to the drone
+
+		FTransform InverseOffset = CargoOffset.Inverse();
+		FTransform AnchorWorld = InverseOffset * HeldContainer->Mesh->GetComponentTransform();
+		FVector AnchorLoc = AnchorWorld.GetLocation();
+
+		FVector Delta = GetActorLocation() - AnchorLoc;
+		Delta.Z = 0.f;
+
+		const float MaxDistance = 50.f;
+		if (Delta.Size2D() > MaxDistance)
+		{
+			FVector CorrectedLoc = AnchorLoc + Delta.GetClampedToMaxSize2D(MaxDistance);
+			SetActorLocation(FVector(CorrectedLoc.X, CorrectedLoc.Y, GetActorLocation().Z));
+		}
+		PhysicsHandle->SetTargetLocationAndRotation(TargetWorld.GetLocation(), TargetWorld.GetRotation().Rotator()); //Effects Child (Cargo) location
 	}
 
 	const float InterpSpeed = 1.5f;
@@ -268,5 +282,32 @@ void ADroneCharacter::PauseMenu()
 	if (auto GameModeRef = Cast<AGM_ZeroGDeliveryBase>(GetWorld()->GetAuthGameMode()))
 	{
 		GameModeRef->TogglePauseMenu();
+	}
+}
+
+void ADroneCharacter::ToggleContainerLock(bool IsLocked)
+{
+	if (!HeldContainer || !HeldContainer->Mesh) return;
+
+	if (IsLocked)
+	{
+		if (PhysicsHandle->GetGrabbedComponent()) return; //Already Holding something?
+
+		CargoOffset = HeldContainer->Mesh->GetComponentTransform().GetRelativeTransform(GetActorTransform());
+
+		HeldContainer->Mesh->SetSimulatePhysics(true);
+		HeldContainer->Mesh->IgnoreActorWhenMoving(this, IsLocked); //Prevent Jitter from drone collision
+
+		PhysicsHandle->GrabComponentAtLocationWithRotation(HeldContainer->Mesh, NAME_None, HeldContainer->Mesh->GetComponentLocation(), HeldContainer->Mesh->GetComponentRotation());
+		return;
+	}
+
+	if (!IsLocked)
+	{
+		if (PhysicsHandle->GetGrabbedComponent()) //Checks to see if holding something
+		{
+			HeldContainer->Mesh->IgnoreActorWhenMoving(this, IsLocked); //Reenables Drone collision
+			PhysicsHandle->ReleaseComponent();
+		}
 	}
 }

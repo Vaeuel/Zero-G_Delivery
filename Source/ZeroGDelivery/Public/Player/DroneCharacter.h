@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include <PhysicsEngine/PhysicsHandleComponent.h>
+#include <PhysicsEngine/PhysicsConstraintComponent.h>
 #include "DroneCharacter.generated.h"
 
 class AShippingContainer; //Forward declaration?
@@ -15,6 +17,7 @@ class ZEROGDELIVERY_API ADroneCharacter : public APawn //Need to inherit from a 
 
 public:
 	ADroneCharacter(); //Sets default values
+	void ToggleContainerLock(bool bIsLocked);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug")
 	bool IsGravityGunActive = false;
@@ -42,8 +45,11 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* Camera;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	//class UBoxComponent* DroneCollider;
+	UPROPERTY(VisibleAnywhere)
+	UPhysicsHandleComponent* PhysicsHandle;
+
+	UPROPERTY(VisibleAnywhere, Category = "Physics")
+	FTransform CargoOffset;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float ThrustStrength = 400.f;
