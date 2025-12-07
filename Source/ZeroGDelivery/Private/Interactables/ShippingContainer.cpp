@@ -44,7 +44,7 @@ void AShippingContainer::Tick(float DeltaTime)
 
 	if (IsDelivered) EndLife();
 
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("ShippingContainer: Tick: Container Health: %.2f"), GetHealthPercent()));
+	//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("ShippingContainer: Tick: Container Health: %.2f"), GetHealthPercent()));
 }
 
 void AShippingContainer::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -174,7 +174,7 @@ void AShippingContainer::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActo
 	const float MinImpactVelocity = 150.f; //Should prevent Spam collisions if set correctly
 	if (ImpactVelocity < MinImpactVelocity) return;
 
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("ShippingContainer: OnHit is triggered!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("ShippingContainer: OnHit is triggered!"));
 
 	GM->CachedGameHUD->UpdateContainerHealth(GetHealthPercent());
 

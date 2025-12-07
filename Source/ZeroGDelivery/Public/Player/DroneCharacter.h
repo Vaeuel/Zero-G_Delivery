@@ -52,7 +52,7 @@ protected:
 	FTransform CargoOffset;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float ThrustStrength = 400.f;
+	float ThrustStrength = 3000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float YawThrustStrength = 1.0f;
